@@ -7,7 +7,7 @@ import api from "../../services/api";
 const Veiculo: React.FC = () => {
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtroStatus, setFiltroStatus] = useState<string | null>(null); // Estado para armazenar o tipo de filtro selecionado
+  const [filtroStatus, setFiltroStatus] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchVeiculos() {
@@ -32,16 +32,14 @@ const Veiculo: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#00ff00" />
+      <View style={styles.activityIndicator}>
+        <ActivityIndicator size="large" color="#00FF7F" />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-
-
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.input}
