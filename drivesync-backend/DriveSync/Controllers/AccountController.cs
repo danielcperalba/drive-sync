@@ -17,14 +17,17 @@ namespace DriveSync.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly IAuthenticate _authentication;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AccountController(IConfiguration configuration, IAuthenticate authentication)
+        public AccountController(IConfiguration configuration, IAuthenticate authentication, RoleManager<IdentityRole> roleManager)
         {
             _configuration = configuration ??
                 throw new ArgumentNullException(nameof(configuration));
 
             _authentication = authentication ??
                 throw new ArgumentNullException(nameof(authentication));
+
+            _roleManager = roleManager;
         }
 
         [HttpPost("CreateUser")]
@@ -36,15 +39,35 @@ namespace DriveSync.Controllers
                 return BadRequest(ModelState);
             }
 
-            var result = await _authentication.RegisterUser(model.Email, model.Senha);
+            var result = await _authentication.RegisterUser(model.Email, model.Senha, model.PrimeiroNome, model.Sobrenome, model.EmpresaId, model.Cargo, model.Telefone, model.Role);
+
+            var role = model.Role;
+            var roleName = "";
 
             if (result)
             {
-                return Ok($"Usuário {model.Email} criado com sucesso");
+                switch (role)
+                {
+                    case "Administrador":
+                        var roleName = _roleManager.FindByNameAsync("Administrador").Result;
+                        break;
+                    case "Motorista":
+                        var roleName = _roleManager.FindByNameAsync("Motorista").Result;
+                        break;
+                    case "Empresa":
+                        var roleName = _roleManager.FindByNameAsync("Empresa").Result;
+                        break;
+                    case "Root":
+                        var roleName = _roleManager.FindByNameAsync("Root").Result;
+                        break;
+                }
+
+                IdentityResult roleResult = await _userManager.AddToRoleAsync(user, roleName.Name);
+                return Ok($"Usuário {model.PrimeiroNome} {model.Sobrenome} criado com sucesso!");
             }
             else
             {
-                ModelState.AddModelError("CriarUsuario", "Registro inválido.");
+                ModelState.AddModelError("Cadastro de Usuário:", "Registro inválido. Verifique as informações de registro.");
                 return BadRequest(ModelState);
             }
         }
