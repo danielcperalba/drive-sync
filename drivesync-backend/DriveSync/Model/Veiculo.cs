@@ -34,6 +34,8 @@ namespace DriveSync.Model
         public string nmr_chassi { get; set; }
         public string renavam { get; set; }
         public string cor { get; set; }
+        [Required]
+        public int empresaId { get; set; }
         public ICollection<Manutencao> manutencoes { get; } = new List<Manutencao>(); 
     }
 }
