@@ -9,6 +9,23 @@ namespace DriveSync.ViewModel
         public string Email { get; set; }
 
         [Required]
+        public string PrimeiroNome { get; set; }
+
+        [Required]
+        public string Sobrenome { get; set; }
+
+        [Required]
+        public int EmpresaId { get; set; }
+
+        [Required]
+        public string Cargo { get; set; }
+
+        public string Telefone { get; set; }
+
+        [Required]
+        public string Role { get; set; }
+
+        [Required]
         [DataType(DataType.Password)]
         public string Senha { get; set; }
 
