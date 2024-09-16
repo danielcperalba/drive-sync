@@ -17,7 +17,7 @@ namespace DriveSync.Service
         {
             try 
             {
-                return await _context.Veiculos.Include(v => v.manutencoes).ToListAsync();
+                return await _context.Veiculos.Include(v => v.Manutencoes).ToListAsync();
             }
             catch
             {
@@ -30,7 +30,7 @@ namespace DriveSync.Service
             IEnumerable<Veiculo> veiculos;
             if (!string.IsNullOrWhiteSpace(placa))
             {
-                veiculos = await _context.Veiculos.Where(n => n.placa.Contains(placa)).Include(v => v.manutencoes).ToListAsync();
+                veiculos = await _context.Veiculos.Where(n => n.Placa.Contains(placa)).Include(v => v.Manutencoes).ToListAsync();
             }
             else
             {
@@ -41,9 +41,26 @@ namespace DriveSync.Service
 
         public async Task<Veiculo> GetVeiculo(int id)
         {
-            var veiculo = await _context.Veiculos.Include(v => v.manutencoes).FirstOrDefaultAsync(e => e.id == id);
+            var veiculo = await _context.Veiculos.Include(v => v.Manutencoes).FirstOrDefaultAsync(e => e.Id == id);
             return veiculo;
         }
+
+        public async Task<IEnumerable<Veiculo>> GetVeiculosByEmpresaId(int empresaId)
+        {
+            return await _context.Veiculos
+                                 .Where(v => v.EmpresaId == empresaId)
+                                 .Include(v => v.Manutencoes)
+                                 .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Veiculo>> GetVeiculosByPlacaAndEmpresaId(string placa, int empresaId)
+        {
+            return await _context.Veiculos
+                                 .Where(v => v.Placa.Contains(placa) && v.EmpresaId == empresaId)
+                                 .Include(v => v.Manutencoes)
+                                 .ToListAsync();
+        }
+
 
         public async Task CreateVeiculo(Veiculo veiculo)
         {
@@ -59,8 +76,6 @@ namespace DriveSync.Service
         {
             _context.Veiculos.Remove(veiculo);
             await _context.SaveChangesAsync();
-
         }
-        
     }
 }

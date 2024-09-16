@@ -8,6 +8,9 @@ import { Home } from './pages/HomePage';
 import { Empresas } from './pages/EmpresasPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { Multas } from './pages/MultasPage';
+import { Gerenciamento } from './pages/Gerenciamento';
+import { UsuarioEmpresa } from './pages/UsuarioEmpresaPage';
+import { Role } from './pages/RolePage';
 
 export default function AppRoutes() {
     return (
@@ -16,9 +19,12 @@ export default function AppRoutes() {
             <Route path="/veiculos" element={<Veiculos />} />
             <Route path="/manutencoes" element={<Manutencoes />} />
             <Route path="/home" element={<Home />} />
-            <Route path="/empresas" element={<Empresas />} />
+            <Route path="/gerenciamento/empresas" element={<Empresas />} />
             <Route path="/registro" element={<RegisterPage />} />
             <Route path="/multas" element={<Multas />} />
+            <Route path="/gerenciamento" element={<Gerenciamento />} />
+            <Route path="/gerenciamento/usuarioEmpresa" element={<UsuarioEmpresa />} />
+            <Route path="/gerenciamento/role" element={<Role />} />
         </Routes>
     );
 }

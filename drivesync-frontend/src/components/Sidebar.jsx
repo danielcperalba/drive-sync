@@ -3,20 +3,24 @@ import {
   ReceiptText,
   LayoutDashboard,
   BadgeInfo,
-  UserRound,
   Settings,
   CarFront,
   LogOut,
-  Building2,
   UserRoundPlus,
+  Wrench,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-
 import { Header } from "./HeaderBar";
+import { useState } from "react";
 
 export function Sidebar() {
   const token = localStorage.getItem("token");
   const history = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
 
   const authorization = {
     headers: {
@@ -90,7 +94,7 @@ export function Sidebar() {
                 to="/manutencoes"
                 className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
               >
-                <Settings />
+                <Wrench />
                 <span className="flex-1 ms-3 whitespace-nowrap">
                   Manutenções
                 </span>
@@ -101,23 +105,57 @@ export function Sidebar() {
 
             <li>
               <Link
-                to="/empresas"
-                className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
-              >
-                <Building2 />
-                <span className="flex-1 ms-3 whitespace-nowrap">Empresas</span>
-              </Link>
-            </li>
-            <li>
-              <Link
                 to="/registro"
                 className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
               >
                 <UserRoundPlus />
-                <span className="flex-1 ms-3 whitespace-nowrap">
-                  Acessos
-                </span>
+                <span className="flex-1 ms-3 whitespace-nowrap">Acessos</span>
               </Link>
+            </li>
+
+            <li>
+              {/* Botão de Dropdown */}
+              <button
+                onClick={toggleDropdown}
+                className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group w-full text-left"
+              >
+                <Settings />
+                <span className="flex-1 ms-3 whitespace-nowrap">Gerenciamento</span>
+
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                </svg>
+              </button>
+
+              {/* Dropdown integrado na estrutura */}
+              {isDropdownOpen && (
+                <ul className="pl-4 mt-2 space-y-1">
+                  <li>
+                    <Link
+                      to="/gerenciamento/empresas"
+                      className="block px-4 py-2 text-gray-900 hover:bg-gray-100"
+                    >
+                      Gerenciar Empresas
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/gerenciamento/role"
+                      className="block px-4 py-2 text-gray-900 hover:bg-gray-100"
+                    >
+                      Gerenciar Roles
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/gerenciamento/relatorios"
+                      className="block px-4 py-2 text-gray-900 hover:bg-gray-100"
+                    >
+                      Gerenciar Assinaturas
+                    </Link>
+                  </li>
+                </ul>
+              )}
             </li>
 
             <hr className="my-3" />

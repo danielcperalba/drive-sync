@@ -26,7 +26,14 @@ namespace DriveSync.Controllers
         {
             try
             {
-                var veiculos = await _veiculoService.GetVeiculos();
+                var empresaId = User.Claims.FirstOrDefault(c => c.Type == "EmpresaId")?.Value;
+
+                if(string.IsNullOrEmpty(empresaId))
+                {
+                    return Unauthorized("Usuário não pertence a nenhuma empresa.");
+                }
+
+                var veiculos = await _veiculoService.GetVeiculosByEmpresaId(int.Parse(empresaId));
                 return Ok(veiculos);
             }
             catch
@@ -41,7 +48,14 @@ namespace DriveSync.Controllers
         {
             try
             {
-                var veiculos = await _veiculoService.GetVeiculosByPlaca(placa);
+                var empresaId = User.Claims.FirstOrDefault(c => c.Type == "EmpresaId")?.Value;
+
+                if(string.IsNullOrEmpty(empresaId))
+                {
+                    return Unauthorized("Usuário não pertence a nenhuma empresa.");
+                }
+
+                var veiculos = await _veiculoService.GetVeiculosByPlacaAndEmpresaId(placa, int.Parse(empresaId));
                 if (veiculos.Count() == 0)
                 {
                     return NotFound($"Não existem veiculos com o critério {placa}");
@@ -76,25 +90,43 @@ namespace DriveSync.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create (Veiculo veiculo)
+        public async Task<ActionResult> Create(Veiculo veiculo)
         {
             try
             {
+                var empresaIdClaim = User.Claims.FirstOrDefault(c => c.Type == "EmpresaId")?.Value;
+
+                // Adicione um log para verificar a claim
+                Console.WriteLine($"EmpresaId na claim: {empresaIdClaim}");
+
+                if (string.IsNullOrEmpty(empresaIdClaim))
+                {
+                    return Unauthorized("Usuário não pertence a nenhuma empresa.");
+                }
+
+                // Converta a claim para int
+                var empresaId = int.Parse(empresaIdClaim);
+
+                veiculo.EmpresaId = empresaId;
+
                 await _veiculoService.CreateVeiculo(veiculo);
-                return CreatedAtRoute(nameof(GetVeiculo), new { Id = veiculo.id }, veiculo);
+                return CreatedAtRoute(nameof(GetVeiculo), new { Id = veiculo.Id }, veiculo);
             }
-            catch
+            catch (Exception ex)
             {
+                // Logue o erro
+                Console.WriteLine($"Erro: {ex.Message}");
                 return BadRequest("Request inválido");
             }
         }
+
 
         [HttpPut("{id:int}")]
         public async Task<ActionResult> Edit(int id, [FromBody] Veiculo veiculo)
         {
             try
             {
-               if(veiculo.id == id)
+               if(veiculo.Id == id)
                 {
                     await _veiculoService.UpdateVeiculo(veiculo);
                     return Ok($"Veiculo com id={id} foi atualizado com sucesso");

@@ -3,16 +3,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using DriveSync.Context;
-
-using Microsoft.Extensions.Configuration;
-using static DriveSync.Context.AppDbContext;
 using DriveSync.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
-using System.Reflection;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,7 +27,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+// Use ApplicationUser instead of IdentityUser
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders()
     .AddRoles<IdentityRole>();
@@ -52,7 +49,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 builder.Services.AddScoped<IAuthenticate, AuthenticateService>();
 builder.Services.AddScoped<IVeiculoService, VeiculosService>();
 builder.Services.AddScoped<IManutencaoService, ManutencaoService>();
@@ -68,8 +64,6 @@ builder.Services.AddCors(options =>
                .WithHeaders("Content-Type", "Authorization"); // Permitir esses headers
     });
 });
-
-
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -101,7 +95,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
 
 var app = builder.Build();
 

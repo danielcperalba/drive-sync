@@ -3,7 +3,7 @@
     public interface IAuthenticate
     {
         Task<bool> Authenticate(string email, string senha);
-        Task<bool> RegisterUser(string email, string senha);
+        Task<bool> RegisterUser(string email, string senha, string primeiroNome, string sobrenome, int empresaId, string cargo, string telefone, string role);
         Task Logout();
     }
 }

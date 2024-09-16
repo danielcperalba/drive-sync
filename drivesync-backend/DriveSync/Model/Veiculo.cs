@@ -3,39 +3,38 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DriveSync.Model
 {
-
     [Table("Veiculos")]
     public class Veiculo
     {
-        public int id { get; set; }
+        public int Id { get; set; } // Alterado para PascalCase
         [Required]
         [StringLength(80)]
-        public string marca { get; set; }
+        public string Marca { get; set; } // Alterado para PascalCase
         [Required]
         [StringLength(80)]
-        public string modelo { get; set; }
+        public string Modelo { get; set; } // Alterado para PascalCase
         [Required]
-        public int? ano { get; set; }
-        [Required]
-        [StringLength(80)]
-        public string placa { get; set; }
-        [Required]
-        public int? quilometragem { get; set; }
+        public int? Ano { get; set; } // Alterado para PascalCase
         [Required]
         [StringLength(80)]
-        public string tp_combustivel { get; set; }
+        public string Placa { get; set; } // Alterado para PascalCase
+        [Required]
+        public int? Quilometragem { get; set; } // Alterado para PascalCase
+        [Required]
+        [StringLength(80)]
+        public string TpCombustivel { get; set; } // Alterado para PascalCase
         [Required]
         [DataType(DataType.Date)]
-        public DateTime? dt_aquisicao { get; set; }
-        public string status { get; set; }
-        public string cap_passageiros { get; set; }
-        public string categoria { get; set; }
+        public DateTime? DtAquisicao { get; set; } // Alterado para PascalCase
+        public string Status { get; set; } // Alterado para PascalCase
+        public string CapPassageiros { get; set; } // Alterado para PascalCase
+        public string Categoria { get; set; } // Alterado para PascalCase
         [StringLength(12)]
-        public string nmr_chassi { get; set; }
-        public string renavam { get; set; }
-        public string cor { get; set; }
+        public string NmrChassi { get; set; } // Alterado para PascalCase
+        public string Renavam { get; set; } // Alterado para PascalCase
+        public string Cor { get; set; } // Alterado para PascalCase
         [Required]
-        public int empresaId { get; set; }
-        public ICollection<Manutencao> manutencoes { get; } = new List<Manutencao>(); 
+        public int EmpresaId { get; set; } // Alterado para PascalCase
+        public ICollection<Manutencao> Manutencoes { get; } = new List<Manutencao>(); // Alterado para PascalCase
     }
 }
