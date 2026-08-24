@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useAuth } from "../../contexts/auth";
 import { getUserData } from "../../services/user";  // Importe o serviço de consulta
 
+import Button from "../../components/Button";
+import Card from "../../components/Card";
+import InfoRow from "../../components/InfoRow";
+import SectionHeader from "../../components/SectionHeader";
+import { Loading } from "../../components/Loading";
+import theme from "../../theme";
 import styles from './styles';
 
 const MinhaConta: React.FC = () => {
@@ -38,46 +44,51 @@ const MinhaConta: React.FC = () => {
     return initials.join('');
   };
 
-  return (
-    <View style={styles.container}>
-      <View>
-        <Text style={styles.subtitle}>Informações da conta</Text>
-      </View>
+  if (loading) {
+    return <Loading label="Carregando seus dados..." />;
+  }
 
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Exibe as iniciais do nome do usuário */}
       <View style={styles.profileInfo}>
         <View style={styles.circle}>
           {userData?.nome ? (
             <Text style={styles.initialsText}>{getInitials(userData.nome)}</Text>
           ) : (
-            <Ionicons name="person" size={40} color="gray" />
+            <Ionicons name="person" size={28} color={theme.COLORS.TEXT_INVERTED} />
           )}
         </View>
 
         {/* Nome e Cargo ao lado do círculo */}
         <View style={styles.userDetails}>
-          <Text style={styles.userName}>{userData?.nome}</Text>
-          <Text style={styles.userPosition}>{userData?.cargo}</Text>
+          <Text style={styles.userName} numberOfLines={2}>{userData?.nome || 'Usuário'}</Text>
+          <Text style={styles.userPosition}>{userData?.cargo || '—'}</Text>
         </View>
       </View>
 
-      <View style={styles.userInfo}>
-        <Text style={styles.titleInfo}>E-mail</Text>
-        <Text style={styles.info}>{user?.email}</Text>
+      <View style={styles.section}>
+        <SectionHeader title="Informações da conta" />
 
-        {userData && (
-          <>
-            <Text style={styles.titleInfo}>Telefone</Text>
-            <Text style={styles.info}>{userData.telefone}</Text>
-          </>
-        )}
+        <Card noPadding style={styles.infoCard}>
+          <InfoRow label="E-mail" value={user?.email} last={!userData} />
+          {userData ? <InfoRow label="Telefone" value={userData.telefone} last /> : null}
+        </Card>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleSignOut}>
-        <Text style={styles.buttonText}>Desconectar</Text>
-        <Ionicons name="log-out-outline" size={25} color="white" />
-      </TouchableOpacity>
-    </View>
+      <View style={styles.footer}>
+        <Button
+          title="Desconectar"
+          variant="destructive"
+          icon="log-out-outline"
+          onPress={handleSignOut}
+        />
+      </View>
+    </ScrollView>
   );
 };
 

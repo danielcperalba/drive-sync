@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, FlatList, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, FlatList } from "react-native";
 import styles from './styles';
 import VeiculoCard from "../../components/VeiculoCard";
+import FilterChips, { FilterOption } from "../../components/FilterChips";
+import EmptyState from "../../components/EmptyState";
+import { Loading } from "../../components/Loading";
 import api from "../../services/api";
 import { connectSignalR, listenToVeiculoUpdates, disconnectSignalR } from "../../services/signalRService"; // Importa funções do SignalR
+
+const FILTROS: FilterOption<string | null>[] = [
+  { label: 'Todos', value: null },
+  { label: 'Disponível', value: 'Disponível' },
+  { label: 'Em uso', value: 'Em uso' },
+  { label: 'Manutenção', value: 'Em manutenção' },
+];
 
 const Veiculo: React.FC = () => {
   const [veiculos, setVeiculos] = useState<any[]>([]);
@@ -80,36 +90,35 @@ const Veiculo: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#00ff00" />
-      </View>
-    );
+    return <Loading label="Carregando veículos..." />;
   }
 
   return (
     <View style={styles.container}>
-
-      <View style={styles.filterContainer}>
-        <TouchableOpacity style={[styles.filterButton, filtroStatus === null && styles.filterButtonSelected]} onPress={() => handleFiltrar(null)}>
-          <Text style={[styles.filterButtonText, filtroStatus === null && styles.filterButtonTextSelected]}>Todos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.filterButton, filtroStatus === 'Disponível' && styles.filterButtonSelected]} onPress={() => handleFiltrar('Disponível')}>
-          <Text style={[styles.filterButtonText, filtroStatus === 'Disponível' && styles.filterButtonTextSelected]}>Disponível</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.filterButton, filtroStatus === 'Em uso' && styles.filterButtonSelected]} onPress={() => handleFiltrar('Em uso')}>
-          <Text style={[styles.filterButtonText, filtroStatus === 'Em uso' && styles.filterButtonTextSelected]}>Em uso</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.filterButton, filtroStatus === 'Em manutenção' && styles.filterButtonSelected]} onPress={() => handleFiltrar('Em manutenção')}>
-          <Text style={[styles.filterButtonText, filtroStatus === 'Em manutenção' && styles.filterButtonTextSelected]}>Manutenção</Text>
-        </TouchableOpacity>
-      </View>
+      <FilterChips
+        options={FILTROS}
+        selected={filtroStatus}
+        onSelect={handleFiltrar}
+        style={styles.filters}
+      />
 
       <FlatList
         data={filteredVeiculos}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <VeiculoCard veiculo={item} />}
-        contentContainerStyle={styles.cardContainer}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <EmptyState
+            icon="bus-outline"
+            title="Nenhum veículo encontrado"
+            description={
+              filtroStatus
+                ? `Não há veículos com o status “${filtroStatus}”.`
+                : 'Nenhum veículo cadastrado até o momento.'
+            }
+          />
+        }
       />
     </View>
   );

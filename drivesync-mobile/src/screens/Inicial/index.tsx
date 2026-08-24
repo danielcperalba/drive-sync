@@ -1,62 +1,44 @@
 import React from 'react';
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from 'react-native';
+import { View, Text, ImageBackground } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import Button from '../../components/Button';
+import theme from '../../theme';
+import styles from './styles';
 
 const OnboardingScreen = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   return (
-    <ImageBackground source={require('../../assets/SignIn2.png')} style={styles.background} resizeMode="cover">
+    <ImageBackground
+      source={require('../../assets/SignIn2.png')}
+      style={styles.background}
+      resizeMode="cover"
+    >
       <View style={styles.overlay}>
-        <View style={styles.content}>
+        <View
+          style={[
+            styles.content,
+            { paddingBottom: insets.bottom + theme.SPACING.XL },
+          ]}
+        >
           <Text style={styles.title}>Controle sua rotina de viagens com o DriveSync</Text>
-          <TouchableOpacity
-            style={styles.button}
+          <Text style={styles.subtitle}>
+            Partidas, chegadas e checklist do veículo registrados em um só lugar.
+          </Text>
+
+          <Button
+            title="Continuar"
+            iconRight="arrow-forward"
             onPress={() => navigation.navigate('Login')}
-            activeOpacity={1}
-          >
-            <Text style={styles.buttonText}>Continuar</Text>
-          </TouchableOpacity>
+            style={styles.action}
+          />
         </View>
       </View>
     </ImageBackground>
   );
 };
-
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end', // Alinha o conteúdo na parte inferior
-    alignItems: 'flex-start',
-  },
-  content: {
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingBottom: 50, // Ajuste de espaçamento do botão na parte inferior
-  },
-  title: {
-    color: '#000',
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 15,
-    textAlign: 'left',
-  },
-  button: {
-    backgroundColor: '#000',
-    paddingVertical: 12,
-    paddingHorizontal: 35,
-    borderRadius: 10,
-    width: '100%', // Adiciona esta linha para fazer o botão ocupar a largura da tela
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center', // Centraliza o texto dentro do botão
-  },
-});
 
 export default OnboardingScreen;

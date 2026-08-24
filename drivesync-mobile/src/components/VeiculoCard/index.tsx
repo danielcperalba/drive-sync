@@ -1,9 +1,11 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity } from "react-native-gesture-handler";
 import { useNavigation } from '@react-navigation/native';
 import styles from './styles';
+import theme from '../../theme';
+import IconTile from '../IconTile';
+import StatusBadge, { veiculoStatusTone } from '../StatusBadge';
 import { StackNavigationProp } from '../../@type/navigation';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'DetalhesVeiculo'>;
@@ -29,54 +31,27 @@ export default function VeiculoCard({ veiculo }: VeiculoCardProps) {
     navigation.navigate('DetalhesVeiculo', { veiculo });
   };
 
-  // Função para definir as cores com base no status
-  const getStatusStyles = (status: string) => {
-    switch (status) {
-      case 'Em uso':
-        return { backgroundColor: '#b3b100', color: '#545454' }; // Amarelo
-      case 'Em manutenção':
-        return { backgroundColor: '#b30000', color: '#545454' }; // Vermelho
-      default:
-        return { backgroundColor: '#00B37E', color: '#545454' }; // Verde (Disponível)
-    }
-  };
-
-  const statusStyles = getStatusStyles(veiculo.status);
-
   return (
-    <TouchableOpacity onPress={handleCardPress}>
-      <View style={styles.container}>
-        <View style={styles.card}>
-          {/* Ícone do Veículo */}
-          <View style={styles.iconSquare}>
-            <Ionicons style={styles.icon} name="bus-outline" size={40} color="white" />
-          </View>
+    <Pressable
+      onPress={handleCardPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${veiculo.marca} ${veiculo.modelo}, placa ${veiculo.placa}`}
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+    >
+      <IconTile name="bus-outline" />
 
-          <View style={styles.content}>
-            <View style={styles.row}>
-              <Text style={styles.valueTitle}>{veiculo.marca}</Text>
-              <Text style={styles.valueTitle}>{veiculo.modelo}</Text>
-            </View>
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={1}>
+          {veiculo.marca} {veiculo.modelo}
+        </Text>
+        <Text style={styles.subtitle}>{veiculo.placa}</Text>
 
-            <View style={styles.row}>
-              <Text style={styles.valueSubtitle}>{veiculo.placa}</Text>
-            </View>
-
-            {/* Status e Círculo de Status */}
-            <View style={styles.row}>
-              <Text style={[styles.valueStatus, { color: statusStyles.color }]}>{veiculo.status}</Text>
-              <View
-                style={[styles.statusCircle, { backgroundColor: statusStyles.backgroundColor }]}
-              />
-            </View>
-          </View>
-
-          {/* Ícone Chevron */}
-          <View style={styles.iconChevron}>
-            <Ionicons name="chevron-forward-outline" size={30} color="#8D8D99" />
-          </View>
+        <View style={styles.badgeRow}>
+          <StatusBadge label={veiculo.status} tone={veiculoStatusTone(veiculo.status)} />
         </View>
       </View>
-    </TouchableOpacity>
+
+      <Ionicons name="chevron-forward" size={18} color={theme.COLORS.TEXT_TERTIARY} />
+    </Pressable>
   );
 }

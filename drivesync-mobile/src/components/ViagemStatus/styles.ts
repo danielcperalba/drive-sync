@@ -1,100 +1,67 @@
 import { StyleSheet } from "react-native";
+import theme from "../../theme";
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff'
-  },
   card: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e8e8e8',
-    borderRadius: 8,
-    paddingVertical: 20
+    borderRadius: theme.RADIUS.MD,
+    borderWidth: theme.BORDER_WIDTH.HAIRLINE,
+    borderColor: theme.COLORS.BORDER,
+    backgroundColor: theme.COLORS.SURFACE,
   },
-  iconSquare: {
-    width: 60,
-    height: 60,
-    backgroundColor: "#e8e8e8",
-    marginRight: 15,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
+  cardPressed: {
+    backgroundColor: theme.COLORS.SURFACE_VARIANT,
   },
-  icon: {
-    color: '#727272',
+  localizacaoWrapper: {
+    padding: theme.SPACING.MD,
+    paddingBottom: 0,
   },
   content: {
-    flex: 1,
+    padding: theme.SPACING.MD,
+    gap: theme.SPACING.XS,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  valueTitle: {
-    color: '#181818',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  valueSubtitle: {
-    fontSize: 14,
-    color: "#545454",
-  },
-
-  valueStatus: {
-    fontSize: 14,
-    fontWeight: 'normal',
-  },
-  iconChevron: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  locationContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    width: '100%',
-    padding: 10,
-    borderWidth: 2,
-    borderRadius: 10,
-    borderColor: '#f3f3f3',
-    marginBottom: 20,
-    backgroundColor: '#000'
-  },
-  input: {
-    backgroundColor: '#f3f3f3',
-    color: '#000000',
-    borderRadius: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    marginBottom: 16,
-    width: '100%',
-  },
-  subtitle: {
-    color: '#000000',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  cardContent:{
-    marginTop: 10
-  },
-  valueStatusBadge: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-    borderRadius: 20,
+    justifyContent: 'space-between',
+    gap: theme.SPACING.XS,
   },
-  statusCircle: {
-    width: 10,
-    height: 10,
-    borderRadius: 5, // Isso cria o círculo
-    backgroundColor: '#00B37E',
-    marginLeft: 5
+  routeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.SPACING.XS,
+  },
+  title: {
+    ...theme.TYPOGRAPHY.sectionTitle,
+    color: theme.COLORS.TEXT_PRIMARY,
+    flexShrink: 1,
+  },
+  titlePending: {
+    ...theme.TYPOGRAPHY.sectionTitle,
+    color: theme.COLORS.TEXT_TERTIARY,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.SPACING.XS,
+  },
+  meta: {
+    ...theme.TYPOGRAPHY.caption,
+    color: theme.COLORS.TEXT_SECONDARY,
+    flexShrink: 1,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.SPACING.XS,
+    paddingTop: theme.SPACING.SM,
+    marginTop: theme.SPACING.XXS,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.COLORS.BORDER,
+  },
+  footerText: {
+    ...theme.TYPOGRAPHY.label,
+    color: theme.COLORS.TEXT_PRIMARY,
   },
 });
 

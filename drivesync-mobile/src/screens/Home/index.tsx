@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useAuth } from "../../contexts/auth";
-import { FontAwesome5 } from '@expo/vector-icons'; // Importando ícones
 import CardViagemStatus from "../../components/ViagemStatus"; // Componente que mostra o status da viagem em andamento
+import SectionHeader from "../../components/SectionHeader";
+import StatTile from "../../components/StatTile";
+import EmptyState from "../../components/EmptyState";
+import { Loading } from "../../components/Loading";
+import { formatarDataCurta } from "../../utils/formatters";
+import styles from "./styles";
 import api from "../../services/api";
-import { connectSignalR, listenToUpdates, disconnectSignalR } from "../../services/signalRService"; // Importa funções do SignalR
 
 const Home: React.FC = () => {
   const { user } = useAuth();
@@ -48,54 +52,67 @@ const Home: React.FC = () => {
   const outrasViagens = atividadesFiltradas.filter(viagem => viagem.status === 1);
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#00ff00" />
-      </View>
-    );
+    return <Loading label="Carregando suas viagens..." />;
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Saudação personalizada com o nome do usuário */}
       <View style={styles.header}>
         <Text style={styles.greeting}>Bem-vindo, {user?.name || "Usuário"}!</Text>
+        <Text style={styles.greetingSubtitle}>Acompanhe suas viagens e o veículo em uso.</Text>
       </View>
 
       {/* Renderiza o CardViagemStatus para viagem em andamento, se existir */}
-      {viagemEmAndamento ? (
-        <CardViagemStatus viagem={viagemEmAndamento} />
-      ) : (
-        <Text style={styles.noViagemText}>Nenhuma viagem em andamento.</Text>
-      )}
+      <View style={styles.section}>
+        <SectionHeader title="Viagem atual" />
+        {viagemEmAndamento ? (
+          <CardViagemStatus viagem={viagemEmAndamento} />
+        ) : (
+          <EmptyState
+            icon="navigate-outline"
+            title="Nenhuma viagem em andamento"
+            description="Use a aba Nova viagem para registrar uma partida."
+          />
+        )}
+      </View>
 
-      {/* Resumo de Viagens com ícones */}
-      <Text style={styles.subtitle}>Resumo de Viagens</Text>
-      <View style={styles.summaryContainer}>
-        <View style={styles.summaryCard}>
-          <FontAwesome5 name="route" size={24} color="#000" />
-          <Text style={styles.summaryText}>Total de viagens registradas: {viagens.length}</Text>
-        </View>
-        <View style={styles.summaryCard}>
-          <FontAwesome5 name="calendar" size={24} color="#000" />
-          <Text style={styles.summaryText}>Última viagem: {viagens[0]?.data_inicio || 'Não disponível'}</Text>
+      {/* Resumo de Viagens */}
+      <View style={styles.section}>
+        <SectionHeader title="Resumo de viagens" />
+        <View style={styles.tileRow}>
+          <StatTile
+            icon="git-branch-outline"
+            value={viagens.length}
+            label="Viagens registradas"
+          />
+          <StatTile
+            icon="calendar-outline"
+            /* `data_inicio` é o campo usado no mock; a API devolve `dataInicio`. */
+            value={formatarDataCurta(viagens[0]?.data_inicio ?? viagens[0]?.dataInicio) ?? '—'}
+            label="Última viagem"
+          />
         </View>
       </View>
 
-      {/* Estatísticas com ícones e cards */}
-      <Text style={styles.subtitle}>Estatísticas</Text>
-      <View style={styles.cardsContainer}>
-        <View style={styles.card}>
-          <FontAwesome5 name="route" size={24} color="#000" />
-          <Text style={styles.cardText}>Viagens em andamento: {viagens.filter(v => v.status === 0).length}</Text>
-        </View>
-        <View style={styles.card}>
-          <FontAwesome5 name="check-circle" size={24} color="#000" />
-          <Text style={styles.cardText}>Viagens concluídas: {viagens.filter(v => v.status === 1).length}</Text>
-        </View>
-        <View style={styles.card}>
-          <FontAwesome5 name="calendar" size={24} color="#000" />
-          <Text style={styles.cardText}>Última viagem: {viagens[0]?.data_inicio || 'Não disponível'}</Text>
+      {/* Estatísticas */}
+      <View style={styles.section}>
+        <SectionHeader title="Estatísticas" />
+        <View style={styles.tileRow}>
+          <StatTile
+            icon="navigate-outline"
+            value={viagens.filter(v => v.status === 0).length}
+            label="Em andamento"
+          />
+          <StatTile
+            icon="checkmark-circle-outline"
+            value={viagens.filter(v => v.status === 1).length}
+            label="Concluídas"
+          />
         </View>
       </View>
     </ScrollView>
@@ -103,85 +120,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    padding: 12,
-    paddingVertical: 30,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 10,
-  },
-  greeting: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginVertical: 15,
-  },
-  summaryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 15,
-  },
-  summaryCard: {
-    backgroundColor: '#f5f5f5',
-    padding: 15,
-    borderRadius: 8,
-    width: '48%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
-  },
-  summaryText: {
-    fontSize: 16,
-    color: '#333',
-    marginTop: 10,
-    textAlign: 'center',
-  },
-  statisticsContainer: {
-    padding: 10,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    marginVertical: 15,
-  },
-  statText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  cardsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 15,
-  },
-  card: {
-    backgroundColor: '#f5f5f5',
-    padding: 15,
-    borderRadius: 8,
-    width: '30%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
-  },
-  cardText: {
-    fontSize: 16,
-    color: '#333',
-    marginTop: 10,
-    textAlign: 'center',
-  },
-  noViagemText: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginVertical: 20,
-    color: '#888',
-  },
-});

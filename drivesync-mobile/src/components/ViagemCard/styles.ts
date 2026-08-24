@@ -1,72 +1,39 @@
 import { StyleSheet } from "react-native";
+import theme from "../../theme";
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 5,
-    backgroundColor: '#fff'
-  },
-  noViagemText: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginVertical: 20,
-  },
   card: {
-    backgroundColor: '#fff',
-    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8e8e8'
+    gap: theme.SPACING.SM,
+    padding: theme.SPACING.SM,
+    marginBottom: theme.SPACING.XS,
+    borderRadius: theme.RADIUS.MD,
+    borderWidth: theme.BORDER_WIDTH.HAIRLINE,
+    borderColor: theme.COLORS.BORDER,
+    backgroundColor: theme.COLORS.SURFACE,
   },
-  iconSquare: {
-    width: 60,
-    height: 60,
-    backgroundColor: "#e8e8e8",
-    marginRight: 15,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  icon: {
-    color: '#727272',
+  cardPressed: {
+    backgroundColor: theme.COLORS.SURFACE_VARIANT,
   },
   content: {
     flex: 1,
+    gap: theme.SPACING.XXS,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+  title: {
+    ...theme.TYPOGRAPHY.cardTitle,
+    color: theme.COLORS.TEXT_PRIMARY,
   },
-  value: {
-    fontSize: 16,
-    color: "#C4C4CC",
+  subtitle: {
+    ...theme.TYPOGRAPHY.caption,
+    color: theme.COLORS.TEXT_SECONDARY,
   },
-  valueTitle: {
-    color: '#181818',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  valueSubtitle: {
-    fontSize: 14,
-    color: "#545454",
-  },
-
-  valueStatusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 0,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-  },
-  valueStatus: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  iconChevron: {
-    justifyContent: 'center',
+  metaRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 10,
-  }
+    gap: theme.SPACING.XS,
+    marginTop: theme.SPACING.XXS / 2,
+  },
 });
 
 export default styles;

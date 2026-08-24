@@ -1,11 +1,15 @@
 import { HubConnectionBuilder } from '@microsoft/signalr';
 import API_BASE_URL from "../config/config"; // Importe a URL do arquivo de configuração
+import { USE_MOCK } from "../config/mock";
 
 // Variável para armazenar a conexão do SignalR
 let connection = null;
 
 // Função para conectar ao SignalR
 export const connectSignalR = () => {
+  // No modo de demonstração não há servidor: o tempo real fica desligado.
+  if (USE_MOCK) return null;
+
   if (connection) {
     console.log('Já conectado ao SignalR!');
     return connection;  // Se já estiver conectado, retorna a conexão existente
@@ -29,6 +33,8 @@ export const connectSignalR = () => {
 
 // Função para escutar atualizações do SignalR
 export const listenToUpdates = (onUpdate) => {
+  if (USE_MOCK) return;
+
   if (connection) {
     connection.on('AtualizarViagens', (data) => {
       console.log('Atualização de viagem recebida:', data);
@@ -41,6 +47,8 @@ export const listenToUpdates = (onUpdate) => {
 
 // Função para escutar atualizações de veículo
 export const listenToVeiculoUpdates = (onUpdate) => {
+  if (USE_MOCK) return;
+
   if (connection) {
     connection.on('VeiculoAtualizado', (data) => {
       console.log('Atualização de veículo recebida:', data);
@@ -53,6 +61,8 @@ export const listenToVeiculoUpdates = (onUpdate) => {
 
 // Função para desconectar do SignalR
 export const disconnectSignalR = () => {
+  if (USE_MOCK) return;
+
   if (connection) {
     connection.stop()
       .then(() => {

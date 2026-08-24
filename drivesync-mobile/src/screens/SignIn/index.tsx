@@ -1,7 +1,17 @@
 import React, { useState } from "react";
-import { View, Button, StyleSheet, TextInput, TouchableOpacity, Text, Alert, ActivityIndicator } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+  Alert,
+} from "react-native";
 import { useAuth } from "../../contexts/auth";
-import { Ionicons } from '@expo/vector-icons';
+
+import Button from "../../components/Button";
+import Input from "../../components/Input";
+import styles from "./styles";
 
 const SignIn: React.FC = () => {
   const { signIn } = useAuth();
@@ -9,13 +19,21 @@ const SignIn: React.FC = () => {
   const [senha, setSenha] = useState('');
   const [secureText, setSecureText] = useState(true); // Estado para alternar visibilidade da senha
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; senha?: string }>({});
 
   async function handleSign() {
-    if (!email || !senha) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos.");
+    // Validação exibida no próprio campo, em vez de um alerta genérico.
+    const nextErrors = {
+      email: email ? undefined : "Informe seu e-mail.",
+      senha: senha ? undefined : "Informe sua senha.",
+    };
+
+    if (nextErrors.email || nextErrors.senha) {
+      setErrors(nextErrors);
       return;
     }
 
+    setErrors({});
     setLoading(true);
 
     try {
@@ -28,110 +46,60 @@ const SignIn: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Bem vindo(a)!</Text>
+          <Text style={styles.subtitle}>Entre com sua conta para continuar.</Text>
+        </View>
 
-      <Text style={styles.welcomeText}>Bem vindo(a)!</Text>
-
-      <View style={styles.inputContainer}>
-        <Ionicons name="mail-outline" size={20} color="#aaa" style={styles.inputIcon} />
-        <TextInput
-          style={styles.input}
-          placeholder="E-mail"
-          placeholderTextColor="#aaa"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Ionicons name="lock-closed-outline" size={20} color="#aaa" style={styles.inputIcon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          placeholderTextColor="#aaa"
-          secureTextEntry={secureText} // Controla a visibilidade da senha
-          value={senha}
-          onChangeText={setSenha}
-        />
-        <TouchableOpacity onPress={() => setSecureText(!secureText)}>
-          <Ionicons
-            name={secureText ? "eye-off-outline" : "eye-outline"} // Alterna o ícone
-            size={20}
-            color="#aaa"
+        <View style={styles.form}>
+          <Input
+            label="E-mail"
+            icon="mail-outline"
+            placeholder="seu@email.com"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+            }}
+            error={errors.email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            returnKeyType="next"
           />
-        </TouchableOpacity>
-      </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleSign} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Entrar</Text>}
-      </TouchableOpacity>
-    </View>
+          <Input
+            label="Senha"
+            icon="lock-closed-outline"
+            placeholder="Sua senha"
+            secureTextEntry={secureText} // Controla a visibilidade da senha
+            value={senha}
+            onChangeText={(text) => {
+              setSenha(text);
+              if (errors.senha) setErrors((prev) => ({ ...prev, senha: undefined }));
+            }}
+            error={errors.senha}
+            rightIcon={secureText ? "eye-off-outline" : "eye-outline"} // Alterna o ícone
+            onRightIconPress={() => setSecureText(!secureText)}
+            autoCapitalize="none"
+            returnKeyType="done"
+            onSubmitEditing={handleSign}
+          />
+
+          <Button title="Entrar" onPress={handleSign} isLoading={loading} />
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: 'flex-start',
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 20,
-    gap: 10
-  },
-  circle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#f3f3f3',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    marginBottom: 20
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: "100%",
-    height: 45,
-    backgroundColor: "#f3f3f3",
-    borderRadius: 6,
-    marginBottom: 10,
-    paddingHorizontal: 15,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 18,
-    color: `#000`,
-  },
-  button: {
-    backgroundColor: '#000',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-    marginBottom: 20,
-    width: '100%'
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  welcomeText: {
-    color: '#000',
-    fontSize: 36,
-    fontWeight: 'bold',
-    marginBottom: 30,
-  },
-  forgotText: {
-    color: "#151515",
-    fontSize: 16,
-    marginTop: 10,
-    fontWeight: 'bold',
-  },
-});
 
 export default SignIn;

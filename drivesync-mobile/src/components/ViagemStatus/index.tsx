@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Alert } from "react-native";
+import { View, Text, Alert, Pressable } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity } from "react-native-gesture-handler";
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '../../@type/navigation';
 import * as Location from 'expo-location';
-import MapScreen from '../../components/Map';
+import LocalizacaoCard from '../LocalizacaoCard';
+import EmptyState from '../EmptyState';
+import StatusBadge from '../StatusBadge';
+import theme from '../../theme';
 import styles from './styles';
 import { connectSignalR, listenToUpdates, disconnectSignalR } from '../../services/signalRService';
 
@@ -78,17 +80,36 @@ export default function ViagemCard({ viagem }: ViagemCardProps) {
         return;
       }
 
-      if (viagem.veiculoId) {
+      if (viagem?.veiculoId) {
         buscarDetalhesVeiculo(viagem.veiculoId, setModeloVeiculo, setMarcaVeiculo);
       }
 
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
-      setLocationText(`${location.coords.latitude}, ${location.coords.longitude}`);
+
+      const address = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (address && address.length > 0) {
+        const { subregion, region, street } = address[0];
+
+        // Sigla do estado a partir das maiúsculas do nome da região.
+        const regionAbbreviation = region
+          ? region.match(/[A-Z]/g).join('')
+          : 'RG';
+
+        setLocationText(
+          `${street ? street : 'Rua desconhecida'}, ${subregion ? subregion : 'Cidade desconhecida'}, ${regionAbbreviation}`
+        );
+      } else {
+        setLocationText('Localização desconhecida');
+      }
     };
 
     listenToUpdates((data) => {
-      if (data.id === viagem.id) {
+      if (data.id === viagem?.id) {
         setViagemAtualizada(data);  // Atualiza os dados da viagem com as novas informações
         if (data.veiculoId) {
           buscarDetalhesVeiculo(data.veiculoId, setModeloVeiculo, setMarcaVeiculo);
@@ -99,65 +120,70 @@ export default function ViagemCard({ viagem }: ViagemCardProps) {
     getLocation();
   }, []);
 
-  const getStatusStyles = (status: string) => {
-    switch (status) {
-      default:
-        return { backgroundColor: '#f3f3f3', color: '#0b0b0b' };
-    }
-  };
+  if (!viagemAtualizada) {
+    return (
+      <EmptyState
+        icon="navigate-outline"
+        title="Nenhuma viagem em andamento"
+        description="Inicie uma nova viagem para acompanhar o trajeto por aqui."
+      />
+    );
+  }
 
-  const statusStyles = viagemAtualizada ? getStatusStyles(viagemAtualizada.status) : { backgroundColor: '#8D8D99', color: '#8D8D99' };
+  const emAndamento = viagemAtualizada.status !== '0';
+  const dataInicio = new Date(viagemAtualizada.dataInicio);
 
   return (
-    <TouchableOpacity onPress={handleCardPress} disabled={!viagemAtualizada}>
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <View style={styles.content}>
-            {viagemAtualizada ? (
-              <>
-                <View style={styles.row}>
-                  <MapScreen location={location} />
-                </View>
+    <Pressable
+      onPress={handleCardPress}
+      accessibilityRole="button"
+      accessibilityLabel="Viagem em andamento. Toque para encerrar."
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+    >
+      <View style={styles.localizacaoWrapper}>
+        <LocalizacaoCard
+          endereco={locationText}
+          location={location}
+          titulo="Onde você está agora"
+          variant="filled"
+        />
+      </View>
 
-                <View style={styles.cardContent}>
-                  <View style={styles.row}>
-                    <Text style={styles.valueTitle}>{viagemAtualizada.localizacaoInicio}</Text>
-                    <Ionicons name="arrow-forward-outline" size={20} color="#000" />
-                    <Text style={styles.valueTitle}>...</Text>
-                  </View>
+      <View style={styles.content}>
+        <View style={styles.headerRow}>
+          <StatusBadge
+            label={emAndamento ? 'Em andamento' : 'Encerrada'}
+            tone={emAndamento ? 'info' : 'neutral'}
+          />
+          <Text style={styles.meta}>
+            {dataInicio.toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })} · {dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+        </View>
 
-                  <View style={styles.row}>
-                    <Text style={styles.valueSubtitle}>
-                      {new Date(viagemAtualizada.dataInicio).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      })} - {new Date(viagemAtualizada.dataInicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
+        <View style={styles.routeRow}>
+          <Text style={styles.title} numberOfLines={1}>
+            {viagemAtualizada.localizacaoInicio}
+          </Text>
+          <Ionicons name="arrow-forward" size={16} color={theme.COLORS.TEXT_TERTIARY} />
+          <Text style={styles.titlePending}>...</Text>
+        </View>
 
-                  {/* Exibe a marca e o modelo do veículo */}
-                  <View style={styles.row}>
-                    <Text style={styles.valueSubtitle}>
-                      {marcaVeiculo ? `${marcaVeiculo} - ${modeloVeiculo}` : 'Carregando...'}
-                    </Text>
-                  </View>
+        <View style={styles.metaRow}>
+          <Ionicons name="bus-outline" size={14} color={theme.COLORS.TEXT_TERTIARY} />
+          <Text style={styles.meta} numberOfLines={1}>
+            {marcaVeiculo ? `${marcaVeiculo} — ${modeloVeiculo}` : 'Carregando...'}
+          </Text>
+        </View>
 
-                  <View style={styles.valueStatusBadge}>
-                    <Text style={styles.valueSubtitle}>
-                      {viagemAtualizada.status === '0' ? 'Encerrada' : 'Em andamento'}
-                    </Text>
-                    <View style={styles.statusCircle} />
-                  </View>
-
-                </View>
-              </>
-            ) : (
-              <Text style={styles.valueTitle}>Nenhuma Viagem em Andamento</Text>
-            )}
-          </View>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Encerrar viagem</Text>
+          <Ionicons name="chevron-forward" size={18} color={theme.COLORS.TEXT_PRIMARY} />
         </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }

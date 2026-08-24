@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, FlatList, ActivityIndicator, ScrollView } from "react-native";
+import { View, FlatList } from "react-native";
 import styles from './styles';
 import ViagemCard from "../../components/ViagemCard";  // Componente para exibir cada card de viagem
 import CardViagemStatus from "../../components/ViagemStatus"; // Componente que mostra o status da viagem em andamento
+import SectionHeader from "../../components/SectionHeader";
+import EmptyState from "../../components/EmptyState";
+import { Loading } from "../../components/Loading";
 import api from "../../services/api";
 
 const Atividade: React.FC = () => {
@@ -48,34 +51,44 @@ const Atividade: React.FC = () => {
   const outrasViagens = atividadesFiltradas.filter(viagem => viagem.status === 1);
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#00ff00" />
-      </View>
-    );
+    return <Loading label="Carregando atividades..." />;
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
+    <FlatList
+      style={styles.container}
+      contentContainerStyle={styles.listContent}
+      data={outrasViagens}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item }) => <ViagemCard viagem={item} />}
+      showsVerticalScrollIndicator={false}
+      /* O cabeçalho rola junto com a lista, evitando lista dentro de ScrollView. */
+      ListHeaderComponent={
+        <View style={styles.header}>
+          <View style={styles.section}>
+            <SectionHeader title="Viagem atual" />
+            {viagemEmAndamento ? (
+              <CardViagemStatus viagem={viagemEmAndamento} />
+            ) : (
+              <EmptyState
+                icon="navigate-outline"
+                title="Nenhuma viagem em andamento"
+                description="Use a aba Nova viagem para registrar uma partida."
+              />
+            )}
+          </View>
 
-      {/* Renderiza o CardViagemStatus para viagem em andamento, se existir */}
-      {viagemEmAndamento ? (
-        <CardViagemStatus viagem={viagemEmAndamento} />
-      ) : (
-        <Text style={styles.noViagemText}>Nenhuma viagem em andamento.</Text>
-      )}
-
-      <Text style={styles.subtitle}>Anteriores</Text>
-
-      {/* Renderiza os cards de todas as viagens, exceto a viagem em andamento */}
-      <FlatList
-        data={outrasViagens}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <ViagemCard viagem={item} />}
-        contentContainerStyle={styles.cardContainer}
-        ListEmptyComponent={<Text style={styles.noViagemText}>Nenhuma atividade encontrada.</Text>}
-      />
-    </ScrollView>
+          <SectionHeader title="Anteriores" subtitle="Viagens já encerradas" />
+        </View>
+      }
+      ListEmptyComponent={
+        <EmptyState
+          icon="time-outline"
+          title="Nenhuma atividade encontrada"
+          description="As viagens encerradas aparecerão aqui."
+        />
+      }
+    />
   );
 }
 

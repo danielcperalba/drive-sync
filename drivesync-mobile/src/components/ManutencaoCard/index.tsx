@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { Ionicons } from '@expo/vector-icons';
 import styles from "./styles";
+import IconTile from "../IconTile";
 
 interface Manutencao {
   id: number;
@@ -20,17 +20,21 @@ interface ManutencaoCardProps {
 export default function ManutencaoCard({ manutencao }: ManutencaoCardProps) {
   return (
     <View style={styles.card}>
-      <View style={styles.iconSquare}>
-        <Ionicons style={styles.icon} name="build-outline" size={40} color="white" />
-      </View>
+      <IconTile name="construct-outline" size={40} />
 
       <View style={styles.content}>
-        <Text style={styles.valueTitle}>Manutenção {manutencao.tp_manutencao}</Text>
-        <Text style={styles.value}>{manutencao.servico}</Text>
-        <Text style={styles.valueDate}>{new Date(manutencao.dt_manutencao).toLocaleDateString()}</Text>
-        <View style={styles.contentDescription}>
-          <Text style={styles.value}>{manutencao.descricao}</Text>
+        <Text style={styles.overline}>Manutenção {manutencao.tp_manutencao}</Text>
+
+        <View style={styles.headerRow}>
+          <Text style={styles.title} numberOfLines={1}>{manutencao.servico}</Text>
+          <Text style={styles.date}>
+            {new Date(manutencao.dt_manutencao).toLocaleDateString('pt-BR')}
+          </Text>
         </View>
+
+        {manutencao.descricao ? (
+          <Text style={styles.description}>{manutencao.descricao}</Text>
+        ) : null}
       </View>
     </View>
   );

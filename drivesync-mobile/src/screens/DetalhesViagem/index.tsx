@@ -1,7 +1,56 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
 import api from '../../services/api';
+import theme from '../../theme';
+import Card from '../../components/Card';
+import InfoRow from '../../components/InfoRow';
+import SectionHeader from '../../components/SectionHeader';
+import styles from './styles';
+
+const isEmpty = (value: any) => value === null || value === undefined || value === '';
+
+/** Uma parada do trajeto (partida ou chegada). */
+const Stop = ({ icon, label, local, data, observacao, isLast = false }) => (
+  <View style={styles.stop}>
+    <View style={styles.stopMarker}>
+      <Ionicons name={icon} size={18} color={theme.COLORS.TEXT_SECONDARY} />
+      {!isLast ? <View style={styles.stopLine} /> : null}
+    </View>
+
+    <View style={styles.stopContent}>
+      <Text style={styles.stopLabel}>{label}</Text>
+      <Text style={styles.stopTitle}>{local || 'Local não informado'}</Text>
+      {data ? <Text style={styles.stopMeta}>{data}</Text> : null}
+      {observacao ? <Text style={styles.stopNote}>{observacao}</Text> : null}
+    </View>
+  </View>
+);
+
+/** Linha do comparativo: métrica, valor no início e no encerramento da viagem. */
+const DiagnosticoRow = ({ label, inicio, encerramento, unidade = '', last = false }) => {
+  const format = (value: any) =>
+    isEmpty(value) ? '—' : unidade ? `${value} ${unidade}` : `${value}`;
+
+  return (
+    <View style={[styles.diagnosticoRow, !last && styles.diagnosticoDivider]}>
+      <View style={styles.colLabel}>
+        <Text style={styles.metricLabel}>{label}</Text>
+      </View>
+      <View style={styles.colValue}>
+        <Text style={isEmpty(inicio) ? styles.metricValueEmpty : styles.metricValue}>
+          {format(inicio)}
+        </Text>
+      </View>
+      <View style={styles.colValue}>
+        <Text style={isEmpty(encerramento) ? styles.metricValueEmpty : styles.metricValue}>
+          {format(encerramento)}
+        </Text>
+      </View>
+    </View>
+  );
+};
 
 const DetalhesViagem = ({ route }) => {
   const { viagem } = route.params; // Obtém os detalhes da viagem passados como parâmetros
@@ -29,203 +78,117 @@ const DetalhesViagem = ({ route }) => {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
-    }) + ' ' +
+    }) + ' · ' +
       new Date(data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Informações da Viagem</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Seção: trajeto da viagem */}
+      <View style={styles.section}>
+        <SectionHeader title="Informações da viagem" />
 
-      {/* Seção: Localização e Início */}
-      <View style={styles.detailContainer}>
-        <Text style={styles.label}>
-          <Ionicons name="navigate-sharp" size={20} color="#000" /> {viagem.localizacaoInicio}
-        </Text>
-        <Text style={styles.detail}>{formatarData(viagem.dataInicio)}</Text>
-        <Text style={styles.detail}>{viagem.observacoesInicio}</Text>
-      </View>
-
-      {/* Seção: Localização e Encerramento */}
-      <View style={styles.detailContainer}>
-        <Text style={styles.label}>
-          <Ionicons name="flag-sharp" size={20} color="#000" /> {viagem.localizacaoEncerramento}
-        </Text>
-        <Text style={styles.detail}>{formatarData(viagem.dataEncerramento)}</Text>
-        <Text style={styles.detail}>{viagem.observacoesEncerramento}</Text>
+        <Card>
+          <Stop
+            icon="navigate-outline"
+            label="Partida"
+            local={viagem.localizacaoInicio}
+            data={formatarData(viagem.dataInicio)}
+            observacao={viagem.observacoesInicio}
+          />
+          <Stop
+            icon="flag-outline"
+            label="Chegada"
+            local={viagem.localizacaoEncerramento}
+            data={formatarData(viagem.dataEncerramento)}
+            observacao={viagem.observacoesEncerramento}
+            isLast
+          />
+        </Card>
       </View>
 
       {/* Seção: Informações do Veículo */}
-      <Text style={styles.title}>Informações do Veículo</Text>
-      {veiculo ? (
-        <View style={styles.detailContainer}>
-          <Text style={styles.detail}>{veiculo.marca} {veiculo.modelo}</Text>
-          <Text style={styles.detail}>Ano: {veiculo.ano}</Text>
-          <Text style={styles.detail}>Placa: {veiculo.placa}</Text>
-          <Text style={styles.detail}>Quilometragem: {veiculo.quilometragem} km</Text>
-          <Text style={styles.detail}>Tipo de Combustível: {veiculo.tp_combustivel}</Text>
-          <Text style={styles.detail}>Cor: {veiculo.cor}</Text>
-          <Text style={styles.detail}>Passageiros: {veiculo.cap_passageiros}</Text>
-        </View>
-      ) : (
-        <Text style={styles.detail}>Carregando informações do veículo...</Text>
-      )}
+      <View style={styles.section}>
+        <SectionHeader title="Informações do veículo" />
 
-      <Text style={styles.title}>Diagnóstico do veículo</Text>
-
-
-      {/* Seção: Comparativo do Diagnostico */}
-      <View style={styles.diagnosticoContainer}>
-        {/* Início da viagem */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-            Nível do Combustível
-          </Text>
-          <Text style={styles.detail}>{viagem.nivelCombustivelInicio} %</Text>
-        </View>
-
-        {/* Encerramento da viagem */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-            
-          </Text>
-          <Text style={styles.detail}>{viagem.nivelCombustivelEncerramento} %</Text>
-        </View>
+        <Card noPadding style={styles.infoCard}>
+          {veiculo ? (
+            <>
+              <InfoRow label="Veículo" value={`${veiculo.marca} ${veiculo.modelo}`} />
+              <InfoRow label="Ano" value={veiculo.ano} />
+              <InfoRow label="Placa" value={veiculo.placa} />
+              <InfoRow label="Quilometragem" value={`${veiculo.quilometragem} km`} />
+              <InfoRow label="Tipo de combustível" value={veiculo.tp_combustivel} />
+              <InfoRow label="Cor" value={veiculo.cor} />
+              <InfoRow label="Passageiros" value={veiculo.cap_passageiros} last />
+            </>
+          ) : (
+            <InfoRow label="Veículo" value={null} fallback="Carregando..." last />
+          )}
+        </Card>
       </View>
 
-      <View style={styles.diagnosticoContainer}>
-        {/* Temperatura do Sensor 02 */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-            Temperatura do Sensor
-          </Text>
-          <Text style={styles.detail}>{viagem.temperaturaSensor02Inicio} °C</Text>
-        </View>
+      {/* Seção: comparativo do diagnóstico (início x encerramento) */}
+      <View style={styles.section}>
+        <SectionHeader
+          title="Diagnóstico do veículo"
+          subtitle="Comparativo entre a partida e o encerramento"
+        />
 
-        {/* Encerramento da viagem */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-            
-          </Text>
-          <Text style={styles.detail}>{viagem.temperaturaSensor02Inicio} °C</Text>
-        </View>
+        <Card noPadding style={styles.infoCard}>
+          <View style={styles.diagnosticoHeader}>
+            <View style={styles.colLabel} />
+            <View style={styles.colValue}>
+              <Text style={styles.columnTitle}>Início</Text>
+            </View>
+            <View style={styles.colValue}>
+              <Text style={styles.columnTitle}>Fim</Text>
+            </View>
+          </View>
+
+          <DiagnosticoRow
+            label="Nível do combustível"
+            inicio={viagem.nivelCombustivelInicio}
+            encerramento={viagem.nivelCombustivelEncerramento}
+            unidade="%"
+          />
+          <DiagnosticoRow
+            label="Temperatura do sensor"
+            inicio={viagem.temperaturaSensor02Inicio}
+            encerramento={viagem.temperaturaSensor02Encerramento}
+            unidade="°C"
+          />
+          <DiagnosticoRow
+            label="Temperatura da transmissão"
+            inicio={viagem.temperaturaTransmissaoInicio}
+            encerramento={viagem.temperaturaTransmissaoEncerramento}
+            unidade="°C"
+          />
+          <DiagnosticoRow
+            label="Código de falha"
+            inicio={viagem.codigoFalhaInicio}
+            encerramento={viagem.codigoFalhaEncerramento}
+          />
+          <DiagnosticoRow
+            label="Voltagem da bateria"
+            inicio={viagem.voltagemBateriaInicio}
+            encerramento={viagem.voltagemBateriaEncerramento}
+            unidade="V"
+          />
+          <DiagnosticoRow
+            label="Status da transmissão"
+            inicio={viagem.statusTransmissaoInicio}
+            encerramento={viagem.statusTransmissaoEncerramento}
+            last
+          />
+        </Card>
       </View>
-
-      <View style={styles.diagnosticoContainer}>
-        {/* Temperatura da Transmissão */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-            Temperatura da Transmissão
-          </Text>
-          <Text style={styles.detail}>{viagem.temperaturaTransmissaoInicio} °C</Text>
-        </View>
-
-        {/* Encerramento da viagem */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-          </Text>
-          <Text style={styles.detail}>{viagem.temperaturaTransmissaoEncerramento} °C</Text>
-        </View>
-      </View>
-
-      <View style={styles.diagnosticoContainer}>
-        {/* Código de Falha */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-            Código de Falha
-          </Text>
-          <Text style={styles.detail}>{viagem.codigoFalhaInicio} °C</Text>
-        </View>
-
-        {/* Encerramento da viagem */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-          </Text>
-          <Text style={styles.detail}>{viagem.codigoFalhaEncerramento} °C</Text>
-        </View>
-      </View>
-
-      <View style={styles.diagnosticoContainer}>
-        {/* Voltagem Bateria */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-            Voltagem da Bateria
-          </Text>
-          <Text style={styles.detail}>{viagem.voltagemBateriaInicio} volts</Text>
-        </View>
-
-        {/* Encerramento da viagem */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-          </Text>
-          <Text style={styles.detail}>{viagem.voltagemBateriaEncerramento} volts</Text>
-        </View>
-      </View>
-
-      <View style={styles.diagnosticoContainer}>
-        {/* Status da Transmissão */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-            Status da Transmissão
-          </Text>
-          <Text style={styles.detail}>{viagem.statusTransmissaoInicio}</Text>
-        </View>
-
-        {/* Encerramento da viagem */}
-        <View style={styles.diagnosticoItem}>
-          <Text style={styles.label}>
-          </Text>
-          <Text style={styles.detail}>{viagem.statusTransmissaoEncerramento}</Text>
-        </View>
-      </View>
-      {/* */ }
-      
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 12,
-    color: '#333',
-    textAlign: 'left',
-  },
-  detailContainer: {
-    marginBottom: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 0,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  detail: {
-    fontSize: 16,
-    color: '#555',
-    marginTop: 6,
-  },
-  diagnosticoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  diagnosticoItem: {
-    flex: 1,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 0,
-  },
-});
 
 export default DetalhesViagem;

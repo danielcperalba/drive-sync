@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity } from "react-native-gesture-handler";
 import { useNavigation } from '@react-navigation/native';
 import styles from './styles';
+import theme from '../../theme';
+import IconTile from '../IconTile';
+import StatusBadge from '../StatusBadge';
 import { StackNavigationProp } from '../../@type/navigation';
 import { connectSignalR, listenToUpdates, disconnectSignalR } from "../../services/signalRService";
 
@@ -52,6 +54,7 @@ export default function ViagemCard({ viagem }: ViagemCardProps) {
 
   // Função para formatar a data
   const formatarData = (data: string) => {
+    if (!data) return '';
     const dateObj = new Date(data);
     const options: Intl.DateTimeFormatOptions = {
       day: '2-digit',
@@ -88,46 +91,36 @@ export default function ViagemCard({ viagem }: ViagemCardProps) {
     };
   }, [viagem.id]);
 
+  const emAndamento = viagemAtualizada.status === '1';
+  const dataFormatada = formatarData(viagemAtualizada.dataEncerramento);
+
   return (
-    <TouchableOpacity onPress={handleCardPress}>
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <View style={styles.iconSquare}>
-            <Ionicons style={styles.icon} name="bus-outline" size={35} color="white" />
-          </View>
+    <Pressable
+      onPress={handleCardPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+    >
+      <IconTile name="location-outline" />
 
-          <View style={styles.content}>
-            {/* Exibe localizações, se disponíveis */}
-            <View style={styles.row}>
-              <Text style={styles.valueTitle}>{viagemAtualizada.localizacaoEncerramento}</Text>
-            </View>
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={1}>
+          {viagemAtualizada.localizacaoEncerramento || 'Destino não informado'}
+        </Text>
 
-            {/* Exibe a marca e o modelo do veículo */}
-            <View style={styles.row}>
-              <Text style={styles.valueSubtitle}>
-                {marcaVeiculo ? `${marcaVeiculo} - ${modeloVeiculo}` : 'Carregando...'}
-              </Text>
-            </View>
+        <Text style={styles.subtitle} numberOfLines={1}>
+          {marcaVeiculo ? `${marcaVeiculo} — ${modeloVeiculo}` : 'Carregando...'}
+        </Text>
 
-            <View style={styles.row}>
-              {/* Exibe a data formatada */}
-              <Text style={styles.valueSubtitle}>
-                {formatarData(viagemAtualizada.dataEncerramento)}
-              </Text>
-            </View>
-
-            <View style={styles.row}>
-              <Text style={styles.valueSubtitle}>
-                {viagemAtualizada.status === '1' ? 'Em andamento' : 'Encerrada'}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.iconChevron}>
-            <Ionicons name="chevron-forward-outline" size={30} color="#8D8D99" />
-          </View>
+        <View style={styles.metaRow}>
+          <StatusBadge
+            label={emAndamento ? 'Em andamento' : 'Encerrada'}
+            tone={emAndamento ? 'info' : 'neutral'}
+          />
+          {dataFormatada ? <Text style={styles.subtitle}>{dataFormatada}</Text> : null}
         </View>
       </View>
-    </TouchableOpacity>
+
+      <Ionicons name="chevron-forward" size={18} color={theme.COLORS.TEXT_TERTIARY} />
+    </Pressable>
   );
 }

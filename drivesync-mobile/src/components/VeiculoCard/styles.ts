@@ -1,75 +1,36 @@
 // src/components/VeiculoCard/styles.ts
 import { StyleSheet } from "react-native";
+import theme from "../../theme";
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    alignItems: "center",
-    marginBottom: 10,
-  },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingVertical: 15,
     flexDirection: "row",
-    position: 'relative',
-    borderBottomColor: '#e8e8e8',
-    borderBottomWidth: 1,
-    alignItems: 'center',
+    alignItems: "center",
+    gap: theme.SPACING.SM,
+    padding: theme.SPACING.SM,
+    marginBottom: theme.SPACING.XS,
+    borderRadius: theme.RADIUS.MD,
+    borderWidth: theme.BORDER_WIDTH.HAIRLINE,
+    borderColor: theme.COLORS.BORDER,
+    backgroundColor: theme.COLORS.SURFACE,
   },
-  iconSquare: {
-    width: 60,
-    height: 60,
-    backgroundColor: "#e8e8e8",
-    marginRight: 15,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconChevron: {
-    marginRight: 10,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  icon: {
-    color: '#727272',
+  cardPressed: {
+    backgroundColor: theme.COLORS.SURFACE_VARIANT,
   },
   content: {
     flex: 1,
-    gap: 2,
+    gap: theme.SPACING.XXS,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+  title: {
+    ...theme.TYPOGRAPHY.cardTitle,
+    color: theme.COLORS.TEXT_PRIMARY,
   },
-  valueTitle: {
-    color: '#000',
-    fontSize: 18,
-    fontWeight: 'bold',
+  subtitle: {
+    ...theme.TYPOGRAPHY.caption,
+    color: theme.COLORS.TEXT_SECONDARY,
   },
-  valueSubtitle: {
-    fontSize: 16,
-    color: "#000",
-  },
-  valueStatus: {
-    fontSize: 15,
-    fontWeight: 'normal',
-    color: "#00B37E",
-  },
-  valueStatusBadge: {
-    backgroundColor: "#00B37E50",
-    width: 95,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10
-  },
-  statusCircle: {
-    width: 10,
-    height: 10,
-    borderRadius: 5, // Isso cria o círculo
-    marginLeft: 5
+  badgeRow: {
+    marginTop: theme.SPACING.XXS / 2,
   },
 });
 

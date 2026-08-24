@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, Alert } from "react-native";
-import CheckBox from 'react-native-check-box';
+import { View, ScrollView, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
 import styles from './styles';
 import api from '../../services/api';
-import MapScreen from '../../components/Map';
+import Button from '../../components/Button';
+import Card from '../../components/Card';
+import LocalizacaoCard from '../../components/LocalizacaoCard';
+import Callout from '../../components/Callout';
+import ChecklistItem from '../../components/ChecklistItem';
+import Input from '../../components/Input';
+import SectionHeader from '../../components/SectionHeader';
+import SelectField from '../../components/SelectField';
 import { useAuth } from "../../contexts/auth";
 
 export default function NovaViagem({ navigation }) {
@@ -24,6 +30,7 @@ export default function NovaViagem({ navigation }) {
   const [location, setLocation] = useState(null);
   const [locationText, setLocationText] = useState("Obtendo localização...");
   const [observacoes, setObservacoes] = useState("");
+  const [enviando, setEnviando] = useState(false);
   const { user, signOut } = useAuth();
   const [obdData, setObdData] = useState({
     nivelCombustivelInicio: 0,
@@ -110,6 +117,8 @@ export default function NovaViagem({ navigation }) {
       return;
     }
 
+    setEnviando(true);
+
     try {
       // Suponha que você tenha uma função para obter o e-mail do usuário logado.
       const emailUsuario = user?.email; // Substitua isso com a lógica que obtém o e-mail do usuário
@@ -141,7 +150,9 @@ export default function NovaViagem({ navigation }) {
 
         if (response.status === 201) {
           Alert.alert('Sucesso', 'Viagem iniciada com sucesso!');
-          navigation.navigate('Home');
+          // 'Home' está dentro da pilha da aba 'Início'; navegar direto para
+          // 'Home' daqui não é tratado por nenhum navegador.
+          navigation.navigate('Início');
         } else {
           Alert.alert('Erro', 'Erro ao iniciar a viagem.');
         }
@@ -151,12 +162,10 @@ export default function NovaViagem({ navigation }) {
     } catch (error) {
       console.log('Erro desconhecido ao iniciar viagem:', error);
       Alert.alert('Erro', `Não foi possível iniciar a viagem: ${error.message}`);
+    } finally {
+      setEnviando(false);
     }
   };
-
-
-
-
 
   const handleExtrairDados = () => {
     setObdData({
@@ -189,158 +198,190 @@ export default function NovaViagem({ navigation }) {
     });
   };
 
+  const itensChecklist = Object.keys(checkList);
+  const itensConcluidos = itensChecklist.filter(item => checkList[item]).length;
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.subtitle}>Ponto de partida</Text>
-      <View style={styles.locationContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Localização atual"
-          placeholderTextColor="#aaa"
-          value={locationText}
-          editable={false}
-        />
-        <MapScreen location={location} />
-      </View>
-
-      <Text style={styles.subtitle}>Selecione um veículo</Text>
-      <Picker
-        selectedValue={selectedVeiculo}
-        onValueChange={setSelectedVeiculo}
-        style={styles.picker}
-        dropdownIconColor="#aaa"
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Picker.Item label="Selecione um veículo" value="" />
-        {veiculos.map(veiculo => (
-          <Picker.Item key={veiculo.id} label={`${veiculo.marca} - ${veiculo.modelo} - ${veiculo.placa}`} value={veiculo.id} />
-        ))}
-      </Picker>
+        <View style={styles.section}>
+          <SectionHeader title="Ponto de partida" />
 
-      <Text style={styles.subtitle}>Checklist de segurança</Text>
-      {Object.keys(checkList).map((item, index) => (
-        <View key={index} style={styles.checkItem}>
-          <CheckBox
-            isChecked={checkList[item]}
-            onClick={() => handleCheckBoxChange(item)}
-            rightText={item}
+          <LocalizacaoCard endereco={locationText} location={location} />
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Veículo" />
+
+          <SelectField
+            selectedValue={selectedVeiculo}
+            onValueChange={setSelectedVeiculo}
+            helperText={
+              veiculos.length > 0
+                ? 'Apenas veículos disponíveis são listados.'
+                : 'Nenhum veículo disponível no momento.'
+            }
+          >
+            <Picker.Item label="Selecione um veículo" value="" />
+            {veiculos.map(veiculo => (
+              <Picker.Item
+                key={veiculo.id}
+                label={`${veiculo.marca} - ${veiculo.modelo} - ${veiculo.placa}`}
+                value={veiculo.id}
+              />
+            ))}
+          </SelectField>
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader
+            title="Checklist de segurança"
+            subtitle={`${itensConcluidos} de ${itensChecklist.length} itens confirmados`}
+          />
+
+          <Card style={styles.checklistCard}>
+            {itensChecklist.map((item, index) => (
+              <ChecklistItem
+                key={item}
+                label={item}
+                checked={checkList[item]}
+                onToggle={() => handleCheckBoxChange(item)}
+                last={index === itensChecklist.length - 1}
+              />
+            ))}
+          </Card>
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Dados do veículo (OBD)" />
+
+          <Callout
+            tone="warning"
+            message="Esta é uma versão de teste. Para simular a extração dos dados, toque em “Extrair dados OBD”."
+          />
+
+          <View style={styles.buttonRow}>
+            <Button
+              title="Extrair dados OBD"
+              variant="secondary"
+              size="sm"
+              icon="download-outline"
+              onPress={handleExtrairDados}
+              style={styles.buttonRowItem}
+            />
+            <Button
+              title="Limpar dados"
+              variant="ghost"
+              size="sm"
+              onPress={handleLimparCampos}
+              style={styles.buttonRowItem}
+            />
+          </View>
+
+          <View style={styles.fieldsGroup}>
+            <Input
+              label="Nível de combustível (%)"
+              placeholder="Nível de combustível"
+              keyboardType="numeric"
+              value={obdData.nivelCombustivelInicio.toString()}
+              onChangeText={(text) => setObdData({ ...obdData, nivelCombustivelInicio: parseFloat(text) })}
+            />
+
+            <Input
+              label="Status controle emissão"
+              placeholder="Status controle emissão"
+              value={obdData.statusControleEmissaoInicio.toString()}
+              onChangeText={(text) => setObdData({ ...obdData, statusControleEmissaoInicio: text === 'true' })}
+            />
+
+            <Input
+              label="Monitor catalisador"
+              placeholder="Monitor catalisador"
+              value={obdData.monitorCatalisadorInicio.toString()}
+              onChangeText={(text) => setObdData({ ...obdData, monitorCatalisadorInicio: text === 'true' })}
+            />
+
+            <Input
+              label="Monitor sensor 02"
+              placeholder="Monitor sensor 02"
+              value={obdData.monitorSensor02Inicio.toString()}
+              onChangeText={(text) => setObdData({ ...obdData, monitorSensor02Inicio: text === 'true' })}
+            />
+
+            <Input
+              label="Temperatura sensor 02"
+              placeholder="Temperatura sensor 02"
+              keyboardType="numeric"
+              value={obdData.temperaturaSensor02Inicio.toString()}
+              onChangeText={(text) => setObdData({ ...obdData, temperaturaSensor02Inicio: parseFloat(text) })}
+            />
+
+            <Input
+              label="Temperatura transmissão"
+              placeholder="Temperatura transmissão"
+              keyboardType="numeric"
+              value={obdData.temperaturaTransmissaoInicio.toString()}
+              onChangeText={(text) => setObdData({ ...obdData, temperaturaTransmissaoInicio: parseFloat(text) })}
+            />
+
+            <Input
+              label="Status transmissão"
+              placeholder="Status transmissão"
+              value={obdData.statusTransmissaoInicio}
+              onChangeText={(text) => setObdData({ ...obdData, statusTransmissaoInicio: text })}
+            />
+
+            <Input
+              label="Código de falha"
+              placeholder="Código de falha"
+              autoCapitalize="characters"
+              value={obdData.codigoFalhaInicio}
+              onChangeText={(text) => setObdData({ ...obdData, codigoFalhaInicio: text })}
+            />
+
+            <Input
+              label="Status monitores emissão"
+              placeholder="Status monitores emissão"
+              value={obdData.statusMonitoresEmissaoInicio.toString()}
+              onChangeText={(text) => setObdData({ ...obdData, statusMonitoresEmissaoInicio: text === 'true' })}
+            />
+
+            <Input
+              label="Voltagem da bateria"
+              placeholder="Voltagem da bateria"
+              keyboardType="numeric"
+              value={obdData.voltagemBateriaInicio.toString()}
+              onChangeText={(text) => setObdData({ ...obdData, voltagemBateriaInicio: parseFloat(text) })}
+            />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Observações" />
+
+          <Input
+            placeholder="Anote algo relevante sobre a partida (opcional)"
+            value={observacoes}
+            onChangeText={setObservacoes}
+            multiline
           />
         </View>
-      ))}
 
-      <Text style={styles.subtitle}>Dados do Veículo (OBD)</Text>
-      <View style={styles.inputsContainer}>
-
-        {/* Mensagem explicativa para o usuário */}
-        <Text style={styles.testMessage}>
-          Esta é uma versão de teste. Para simular a extração dos dados, clique no botão 'Extrair'.
-        </Text>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={handleExtrairDados} style={styles.button}>
-            <Text style={styles.buttonText}>Extrair dados OBD</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleLimparCampos} style={styles.button}>
-            <Text style={styles.buttonText}>Limpar Dados</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Adicionando os novos campos conforme solicitado */}
-        <Text style={styles.label}>Nível de Combustível (%)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Nível de Combustível"
-          value={obdData.nivelCombustivelInicio.toString()}
-          onChangeText={(text) => setObdData({ ...obdData, nivelCombustivelInicio: parseFloat(text) })}
+        <Button
+          title="Iniciar viagem"
+          icon="play"
+          onPress={handleIniciarViagem}
+          isLoading={enviando}
+          style={styles.submit}
         />
-
-        <Text style={styles.label}>Status Controle Emissão</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Status Controle Emissão"
-          value={obdData.statusControleEmissaoInicio.toString()}
-          onChangeText={(text) => setObdData({ ...obdData, statusControleEmissaoInicio: text === 'true' })}
-        />
-
-        <Text style={styles.label}>Monitor Catalisador</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Monitor Catalisador"
-          value={obdData.monitorCatalisadorInicio.toString()}
-          onChangeText={(text) => setObdData({ ...obdData, monitorCatalisadorInicio: text === 'true' })}
-        />
-
-        <Text style={styles.label}>Monitor Sensor 02</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Monitor Sensor 02"
-          value={obdData.monitorSensor02Inicio.toString()}
-          onChangeText={(text) => setObdData({ ...obdData, monitorSensor02Inicio: text === 'true' })}
-        />
-
-        <Text style={styles.label}>Temperatura Sensor 02</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Temperatura Sensor 02"
-          value={obdData.temperaturaSensor02Inicio.toString()}
-          onChangeText={(text) => setObdData({ ...obdData, temperaturaSensor02Inicio: parseFloat(text) })}
-        />
-
-        <Text style={styles.label}>Temperatura Transmissão</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Temperatura Transmissão"
-          value={obdData.temperaturaTransmissaoInicio.toString()}
-          onChangeText={(text) => setObdData({ ...obdData, temperaturaTransmissaoInicio: parseFloat(text) })}
-        />
-
-        <Text style={styles.label}>Status Transmissão</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Status Transmissão"
-          value={obdData.statusTransmissaoInicio}
-          onChangeText={(text) => setObdData({ ...obdData, statusTransmissaoInicio: text })}
-        />
-
-        <Text style={styles.label}>Código Falha</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Código Falha"
-          value={obdData.codigoFalhaInicio}
-          onChangeText={(text) => setObdData({ ...obdData, codigoFalhaInicio: text })}
-        />
-
-        <Text style={styles.label}>Status Monitores Emissão</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Status Monitores Emissão"
-          value={obdData.statusMonitoresEmissaoInicio.toString()}
-          onChangeText={(text) => setObdData({ ...obdData, statusMonitoresEmissaoInicio: text === 'true' })}
-        />
-
-        <Text style={styles.label}>Voltagem Bateria</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Voltagem Bateria"
-          value={obdData.voltagemBateriaInicio.toString()}
-          onChangeText={(text) => setObdData({ ...obdData, voltagemBateriaInicio: parseFloat(text) })}
-        />
-      </View>
-
-      <Text style={styles.subtitle}>Observações</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Observações"
-        value={observacoes}
-        onChangeText={setObservacoes}
-        multiline
-      />
-
-      <View style={styles.buttonContainerSend}>
-        <TouchableOpacity onPress={handleIniciarViagem} style={styles.buttonSend}>
-          <Text style={styles.buttonTextSend}>Iniciar Viagem</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
